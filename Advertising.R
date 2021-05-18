@@ -2,6 +2,21 @@
 library(ISLR)
 library(glmnet)
 library(pls)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
+library(tidyverse)
+library(caret)
+library(ggplot2)
+require(plyr)
+require(reshape2)
+require(ggiraph)
+require(rgl)
+require(ggiraphExtra)
+require(TH.data)
+require(predict3d)
+library(car)
+
 data<-read.csv(file.choose())
 View(data)
 
@@ -36,6 +51,7 @@ plot(reg.summary$rss ,xlab="Number of Variables ",ylab="RSS",
      type="l")
 plot(reg.summary$adjr2 ,xlab="Number of Variables ",
      ylab="Adjusted RSq",type="l")
+
 
 which.max(reg.summary$adjr2)
 #2
@@ -157,6 +173,41 @@ x.test.new=test.new[,-4]
 lm.fit=lm(Sales~.,data=train.new)
 summary(lm.fit)
 
+#a linear regression fit to sales using TV and radio as predictors.
+scatter3d(x=train$Radio,y=train$Sales,z=train$TV)
+
+
+#Simple regression of sales on TV
+tab_model(lm.fit,terms = c("(Intercept)","TV"))
+
+#Simple regression of sales on Radio 
+tab_model(lm.fit,terms = c("(Intercept)","Radio"))
+
+#Anova table 
+lm_anova=aov(lm.fit)
+summary(lm_anova)
+
+#Multiple Linear Regression
+multiple.fit=lm(Sales~.,data=train)
+summary(multiple.fit)
+
+#3D Plot of all the variables
+predict3d(multiple.fit,radius=0.5)
+rglwidget(elementId = "1st")
+rgl.bringtotop()
+rglwidget(elementId ="3rd")
+
+#Multiple Linear regression of sales on all 3 variables
+tab_model(multiple.fit)
+
+#Anova table 
+multiple_anova=aov(multiple.fit)
+summary(multiple_anova)
+
+#Calculating VIF scores
+car::vif(multiple.fit)
+#As we can see all the VIF scores are close to 1 that means there is a very small collinearity between the variables.
+
 #Predicting Sales on testing dataset
 lm.predict=predict(lm.fit,newdata=x.test.new)
 
@@ -170,6 +221,7 @@ tss.lm<-sum((y.test-mean(y.test))^2)
 rsq.lm<-1-rss.lm/tss.lm
 rsq.lm
 #0.9095023
+
 
 
 
